@@ -39,7 +39,7 @@ class ThreeSizeAppEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ansi', 'array']}
 
     def __init__(self, **kwargs):
-        self.OBSERVATION_HISTORY_LENGTH = kwargs.get('observation_history_length', 1)
+        self.OBSERVATION_HISTORY_LENGTH: int = int(kwargs.get('observation_history_length', "1"))
         self.NUM_OF_ACTIONS = 7
         self.NUM_OF_OBSERVATION_METRICS = 7
         # actions are identified by integers 0-n
