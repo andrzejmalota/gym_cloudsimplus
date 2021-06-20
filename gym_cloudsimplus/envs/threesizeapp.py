@@ -3,6 +3,7 @@ import os
 import json
 from gym import spaces
 from py4j.java_gateway import JavaGateway, GatewayParameters
+from collections import deque
 
 import numpy as np
 
@@ -38,9 +39,12 @@ class ThreeSizeAppEnv(gym.Env):
     metadata = {'render.modes': ['human', 'ansi', 'array']}
 
     def __init__(self, **kwargs):
+        self.OBSERVATION_HISTORY_LENGTH = kwargs.get('observation_history_length', 1)
+        self.NUM_OF_ACTIONS = 7
+        self.NUM_OF_OBSERVATION_METRICS = 7
         # actions are identified by integers 0-n
-        self.num_of_actions = 7
-        self.action_space = spaces.Discrete(self.num_of_actions)
+
+        self.action_space = spaces.Discrete(self.NUM_OF_ACTIONS)
 
         # observation metrics - all within 0-1 range
         # "vmAllocatedRatioHistory",
@@ -50,10 +54,10 @@ class ThreeSizeAppEnv(gym.Env):
         # "p90MemoryUtilizationHistory",
         # "waitingJobsRatioGlobalHistory",
         # "waitingJobsRatioRecentHistory"
-        self.observation_space = spaces.Box(
-            low=np.array([0, 0, 0, 0, 0, 0, 0]),
-            high=np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-        )
+        self.observation_space = spaces.Box(low=0,
+                                            high=1.0,
+                                            shape=(self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH),
+                                            dtype=np.float32)
         params = {
             'INITIAL_VM_COUNT': kwargs.get('initial_vm_count'),
             'SOURCE_OF_JOBS': 'PARAMS',
@@ -61,7 +65,7 @@ class ThreeSizeAppEnv(gym.Env):
             'SIMULATION_SPEEDUP': kwargs.get('simulation_speedup', '1.0'),
             'SPLIT_LARGE_JOBS': kwargs.get('split_large_jobs', 'false'),
         }
-
+        self.observation_history = deque([0.0 for _ in range(self.OBSERVATION_HISTORY_LENGTH)])
         if 'queue_wait_penalty' in kwargs:
             params['QUEUE_WAIT_PENALTY'] = kwargs['queue_wait_penalty']
 
@@ -75,7 +79,10 @@ class ThreeSizeAppEnv(gym.Env):
         done = result.isDone()
         raw_obs = result.getObs()
 
-        obs = to_nparray(raw_obs)
+        if self.OBSERVATION_HISTORY_LENGTH == 1:
+            obs = to_nparray(raw_obs)
+        else:
+            obs = self._get_updated_observation_history(raw_obs=raw_obs)
         return (
             obs,
             reward,
@@ -109,3 +116,8 @@ class ThreeSizeAppEnv(gym.Env):
 
     def seed(self):
         simulation_environment.seed(self.simulation_id)
+
+    def _get_updated_observation_history(self, raw_obs):
+        self.observation_history.pop()
+        self.observation_history.appendleft(list(raw_obs))
+        return np.array(list(self.observation_history))

@@ -6,6 +6,6 @@ register(
 )
 
 register(
-    id='ThreeSizeAppEnv-v0',
+    id='ThreeSizeAppEnv-v1',
     entry_point='gym_cloudsimplus.envs:ThreeSizeAppEnv',
 )
