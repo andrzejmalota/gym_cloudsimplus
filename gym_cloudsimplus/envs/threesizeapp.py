@@ -54,9 +54,10 @@ class ThreeSizeAppEnv(gym.Env):
         # "p90MemoryUtilizationHistory",
         # "waitingJobsRatioGlobalHistory",
         # "waitingJobsRatioRecentHistory"
+        shape = (self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH) if self.OBSERVATION_HISTORY_LENGTH > 1 else (self.NUM_OF_OBSERVATION_METRICS,)
         self.observation_space = spaces.Box(low=0,
                                             high=1.0,
-                                            shape=(self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH),
+                                            shape=shape,
                                             dtype=np.float32)
         params = {
             'INITIAL_VM_COUNT': kwargs.get('initial_vm_count'),
