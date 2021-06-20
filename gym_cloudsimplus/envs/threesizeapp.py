@@ -59,6 +59,7 @@ class ThreeSizeAppEnv(gym.Env):
                                             high=1.0,
                                             shape=shape,
                                             dtype=np.float32)
+        print(shape)
         params = {
             'INITIAL_VM_COUNT': kwargs.get('initial_vm_count'),
             'SOURCE_OF_JOBS': 'PARAMS',
