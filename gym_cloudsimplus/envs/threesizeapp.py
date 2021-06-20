@@ -126,4 +126,4 @@ class ThreeSizeAppEnv(gym.Env):
         return obs
 
     def _init_observation_history(self):
-        return deque([0.0 for _ in range(self.OBSERVATION_HISTORY_LENGTH)])
+        return deque([[0.0 for _ in range(self.NUM_OF_OBSERVATION_METRICS)] for _ in range(self.OBSERVATION_HISTORY_LENGTH)])
