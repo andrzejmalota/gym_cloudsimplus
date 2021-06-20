@@ -54,12 +54,11 @@ class ThreeSizeAppEnv(gym.Env):
         # "p90MemoryUtilizationHistory",
         # "waitingJobsRatioGlobalHistory",
         # "waitingJobsRatioRecentHistory"
-        shape = (self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH) if self.OBSERVATION_HISTORY_LENGTH > 1 else (self.NUM_OF_OBSERVATION_METRICS,)
+        shape = (self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH, 1) if self.OBSERVATION_HISTORY_LENGTH > 1 else (self.NUM_OF_OBSERVATION_METRICS,)
         self.observation_space = spaces.Box(low=0,
                                             high=1.0,
                                             shape=shape,
                                             dtype=np.float32)
-        print(shape)
         params = {
             'INITIAL_VM_COUNT': kwargs.get('initial_vm_count'),
             'SOURCE_OF_JOBS': 'PARAMS',
@@ -81,10 +80,7 @@ class ThreeSizeAppEnv(gym.Env):
         done = result.isDone()
         raw_obs = result.getObs()
 
-        if self.OBSERVATION_HISTORY_LENGTH == 1:
-            obs = to_nparray(raw_obs)
-        else:
-            obs = self._get_updated_observation_history(raw_obs=raw_obs)
+        obs = self._get_updated_observation_history(raw_obs=raw_obs)
         return (
             obs,
             reward,
@@ -95,7 +91,7 @@ class ThreeSizeAppEnv(gym.Env):
     def reset(self):
         result = simulation_environment.reset(self.simulation_id)
         raw_obs = result.getObs()
-        obs = to_nparray(raw_obs)
+        obs = self._get_updated_observation_history(raw_obs=raw_obs)
         return obs
 
     def render(self, mode='human', close=False):
@@ -120,6 +116,10 @@ class ThreeSizeAppEnv(gym.Env):
         simulation_environment.seed(self.simulation_id)
 
     def _get_updated_observation_history(self, raw_obs):
-        self.observation_history.pop()
-        self.observation_history.appendleft(list(raw_obs))
-        return np.array(list(self.observation_history))
+        if self.OBSERVATION_HISTORY_LENGTH == 1:
+            obs = to_nparray(raw_obs)
+        else:
+            self.observation_history.pop()
+            self.observation_history.appendleft(list(raw_obs))
+            obs = np.array(list(self.observation_history))
+        return obs
