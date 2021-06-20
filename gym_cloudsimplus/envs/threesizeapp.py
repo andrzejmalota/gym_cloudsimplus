@@ -54,7 +54,7 @@ class ThreeSizeAppEnv(gym.Env):
         # "p90MemoryUtilizationHistory",
         # "waitingJobsRatioGlobalHistory",
         # "waitingJobsRatioRecentHistory"
-        shape = (self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH, 1) if self.OBSERVATION_HISTORY_LENGTH > 1 else (self.NUM_OF_OBSERVATION_METRICS,)
+        shape = (1, self.NUM_OF_OBSERVATION_METRICS, self.OBSERVATION_HISTORY_LENGTH) if self.OBSERVATION_HISTORY_LENGTH > 1 else (self.NUM_OF_OBSERVATION_METRICS,)
         self.observation_space = spaces.Box(low=0,
                                             high=1.0,
                                             shape=shape,
@@ -66,7 +66,7 @@ class ThreeSizeAppEnv(gym.Env):
             'SIMULATION_SPEEDUP': kwargs.get('simulation_speedup', '1.0'),
             'SPLIT_LARGE_JOBS': kwargs.get('split_large_jobs', 'false'),
         }
-        self.observation_history = deque([0.0 for _ in range(self.OBSERVATION_HISTORY_LENGTH)])
+        self.observation_history = self._init_observation_history()
         if 'queue_wait_penalty' in kwargs:
             params['QUEUE_WAIT_PENALTY'] = kwargs['queue_wait_penalty']
 
@@ -91,6 +91,7 @@ class ThreeSizeAppEnv(gym.Env):
     def reset(self):
         result = simulation_environment.reset(self.simulation_id)
         raw_obs = result.getObs()
+        self.observation_history = self._init_observation_history()
         obs = self._get_updated_observation_history(raw_obs=raw_obs)
         return obs
 
@@ -121,5 +122,8 @@ class ThreeSizeAppEnv(gym.Env):
         else:
             self.observation_history.pop()
             self.observation_history.appendleft(list(raw_obs))
-            obs = np.array(list(self.observation_history))
+            obs = np.array(list(self.observation_history))[np.newaxis, :]
         return obs
+
+    def _init_observation_history(self):
+        return deque([0.0 for _ in range(self.OBSERVATION_HISTORY_LENGTH)])
