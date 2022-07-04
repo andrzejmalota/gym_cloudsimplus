@@ -117,7 +117,7 @@ class ThreeSizeAppEnv(gym.Env):
         # close the resources
         simulation_environment.close(self.simulation_id)
 
-    def seed(self):
+    def seed(self, seed: int):
         simulation_environment.seed(self.simulation_id)
 
     def _get_updated_observation_history(self, raw_obs):
