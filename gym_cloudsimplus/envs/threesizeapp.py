@@ -41,7 +41,7 @@ class ThreeSizeAppEnv(gym.Env):
     def __init__(self, **kwargs):
         self.OBSERVATION_HISTORY_LENGTH: int = int(kwargs.get('observation_history_length', "1"))
         self.NUM_OF_ACTIONS = 7
-        self.NUM_OF_OBSERVATION_METRICS = 7
+        self.NUM_OF_OBSERVATION_METRICS = 6
         # actions are identified by integers 0-n
 
         self.action_space = spaces.Discrete(self.NUM_OF_ACTIONS)
@@ -60,8 +60,8 @@ class ThreeSizeAppEnv(gym.Env):
                                                 shape=(1, self.OBSERVATION_HISTORY_LENGTH, self.NUM_OF_OBSERVATION_METRICS))
         else:
             self.observation_space = spaces.Box(
-                low=np.array([0, 0, 0, 0, 0, 0, 0]),
-                high=np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+                low=np.array([0, 0, 0, 0, 0, 0]),
+                high=np.array([1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
             )
         params = {
             'INITIAL_VM_COUNT': kwargs.get('initial_vm_count'),
@@ -122,11 +122,11 @@ class ThreeSizeAppEnv(gym.Env):
 
     def _get_updated_observation_history(self, raw_obs):
         if self.OBSERVATION_HISTORY_LENGTH == 1:
-            obs = to_nparray(raw_obs)
+            obs = to_nparray(raw_obs)[:self.NUM_OF_OBSERVATION_METRICS]
         else:
             self.observation_history.pop()
             self.observation_history.appendleft(list(raw_obs))
-            obs = np.array(list(self.observation_history))[np.newaxis, :]
+            obs = np.array(list(self.observation_history))[np.newaxis, :self.NUM_OF_OBSERVATION_METRICS]
         return obs
 
     def _init_observation_history(self):
